@@ -71,7 +71,8 @@ func handleCotacao(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctxDB, cancelDB := context.WithTimeout(context.Background(), 1*time.Millisecond)
+	// Definindo o timeout para 10ms conforme requisito
+	ctxDB, cancelDB := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancelDB()
 
 	err = saveToDB(ctxDB, db, quote)
@@ -91,6 +92,7 @@ func handleCotacao(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(quote.USDBRL.Bid)
 }
 
+// fetchDollarQuote fetches the dollar quote from the API
 func fetchDollarQuote(ctx context.Context, quote *DollarQuoteReceived) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://economia.awesomeapi.com.br/json/last/USD-BRL", nil)
 	if err != nil {
@@ -113,6 +115,7 @@ func fetchDollarQuote(ctx context.Context, quote *DollarQuoteReceived) error {
 	return nil
 }
 
+// saveToDB saves the dollar quote to the database
 func saveToDB(ctxDB context.Context, db *sql.DB, quote DollarQuoteReceived) error {
 	_, err := db.ExecContext(ctxDB, `
 		INSERT INTO quotes (code, codein, name, high, low, varBid, pctChange, bid, ask, timestamp, createDate) 
